@@ -1,10 +1,13 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # ← أضف هذه
 import joblib
 import numpy as np
 import pandas as pd
 from math import radians, sin, cos, sqrt, atan2
+import os
 
-app = Flask(__name__)
+app = Flask(_name_)
+CORS(app)  # ← تفعيل CORS لجميع النطاقات
 
 # تحميل المودل والمقياس
 model = joblib.load("toweriq_model_prob.pkl")
@@ -16,7 +19,7 @@ def haversine(lat1, lon1, lat2, lon2):
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
     dlat = lat2 - lat1
     dlon = lon2 - lon1
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    a = sin(dlat / 2)*2 + cos(lat1) * cos(lat2) * sin(dlon / 2)*2
     return R * 2 * atan2(sqrt(a), sqrt(1 - a))
 
 # استخراج الإجراء المطلوب
@@ -34,7 +37,6 @@ def suggest_action(prob, alt_diff):
 def predict():
     data = request.json
     try:
-        # التقاط المدخلات
         lat1 = float(data['lat1'])
         lon1 = float(data['lon1'])
         alt1 = float(data['alt1'])
@@ -47,13 +49,11 @@ def predict():
         speed2 = float(data['speed2'])
         heading2 = float(data['heading2'])
 
-        # الميزات المشتقة
         distance = haversine(lat1, lon1, lat2, lon2)
         alt_diff = abs(alt1 - alt2)
         speed_diff = abs(speed1 - speed2)
         heading_diff = abs((heading1 - heading2 + 180) % 360 - 180)
 
-        # تجميع المصفوفة
         features = pd.DataFrame([[
             lat1, lon1, alt1, speed1, heading1,
             lat2, lon2, alt2, speed2, heading2,
@@ -64,10 +64,9 @@ def predict():
             'distance', 'alt_diff', 'speed_diff', 'heading_diff'
         ])
 
-        # القياس والتوقع
         features_scaled = scaler.transform(features)
         prob = model.predict_proba(features_scaled)[0][1]
-        prob_percent = f"{prob*100:.2f}%"
+        prob_percent = f"{prob * 100:.2f}%"
         action = suggest_action(prob, alt_diff)
 
         return jsonify({
@@ -76,8 +75,7 @@ def predict():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 400
-import os
 
-if __name__ == '__main__':
+if _name_ == '_main_':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
