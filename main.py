@@ -13,12 +13,13 @@ model = joblib.load("toweriq_model_prob.pkl")
 scaler = joblib.load("toweriq_scaler_prob.pkl")
 
 def haversine(lat1, lon1, lat2, lon2):
-    R = 6371.0
+    R = 6371.0  # Earth radius in kilometers
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
     dlat = lat2 - lat1
     dlon = lon2 - lon1
-    a = sin(dlat / 2)*2 + cos(lat1) * cos(lat2) * sin(dlon / 2)*2
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
     return R * 2 * atan2(sqrt(a), sqrt(1 - a))
+
 
 def suggest_action(prob, alt_diff):
     if prob > 0.8:
