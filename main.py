@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # ← أضف هذه
+from flask_cors import CORS
 import joblib
 import numpy as np
 import pandas as pd
@@ -7,13 +7,11 @@ from math import radians, sin, cos, sqrt, atan2
 import os
 
 app = Flask(_name_)
-CORS(app)  # ← تفعيل CORS لجميع النطاقات
+CORS(app)
 
-# تحميل المودل والمقياس
 model = joblib.load("toweriq_model_prob.pkl")
 scaler = joblib.load("toweriq_scaler_prob.pkl")
 
-# حساب المسافة الجغرافية
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371.0
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
@@ -22,7 +20,6 @@ def haversine(lat1, lon1, lat2, lon2):
     a = sin(dlat / 2)*2 + cos(lat1) * cos(lat2) * sin(dlon / 2)*2
     return R * 2 * atan2(sqrt(a), sqrt(1 - a))
 
-# استخراج الإجراء المطلوب
 def suggest_action(prob, alt_diff):
     if prob > 0.8:
         return "تنبيه فوري! احتمالية تصادم مرتفعة، راجع الارتفاعات والمسارات"
