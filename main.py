@@ -6,7 +6,7 @@ import pandas as pd
 from math import radians, sin, cos, sqrt, atan2
 import os
 
-app = Flask(_name_)
+app = Flask(__name__)
 CORS(app)
 
 model = joblib.load("toweriq_model_prob.pkl")
@@ -73,6 +73,6 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-if _name_ == '__main__':
+if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
