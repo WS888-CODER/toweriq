@@ -22,13 +22,13 @@ def haversine(lat1, lon1, lat2, lon2):
 
 def suggest_action(prob, alt_diff):
     if prob > 0.8:
-        return "تنبيه فوري! احتمالية تصادم مرتفعة، راجع الارتفاعات والمسارات"
+        return "Immediate alert! High collision potential. Check heights and trajectories."
     elif prob > 0.5:
-        return "تحذير: اقتراح بتغيير مسار أو سرعة إحدى الطائرتين"
+        return "Warning: Suggestion to change course or speed of one of the aircraft."
     elif alt_diff < 300:
-        return "مراجعة فرق الارتفاع: الفرق قليل"
+        return "Height difference review: The difference is small."
     else:
-        return "الوضع آمن، لا حاجة لإجراء حالياً"
+        return "The situation is safe, no action is required at this time."
 
 @app.route('/predict', methods=['POST'])
 def predict():
