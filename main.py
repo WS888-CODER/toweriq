@@ -13,23 +13,37 @@ model = joblib.load("toweriq_model_prob.pkl")
 scaler = joblib.load("toweriq_scaler_prob.pkl")
 
 def haversine(lat1, lon1, lat2, lon2):
-    R = 6371.0  # Earth radius in kilometers
+    R = 6371.0
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
     dlat = lat2 - lat1
     dlon = lon2 - lon1
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    a = sin(dlat / 2)*2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
     return R * 2 * atan2(sqrt(a), sqrt(1 - a))
 
-
-def suggest_action(prob, alt_diff):
-    if prob > 0.8:
-        return "Immediate alert! High collision potential. Check heights and trajectories."
-    elif prob > 0.5:
-        return "Warning: Suggestion to change course or speed of one of the aircraft."
-    elif alt_diff < 300:
-        return "Height difference review: The difference is small."
+def suggest_action(prob, alt_diff, speed_diff, heading_diff, distance):
+    if prob >= 0.95:
+        return "⚠️ Critical alert: Immediate collision risk detected! Take evasive action now."
+    elif prob >= 0.85:
+        return "🚨 High risk: Aircrafts are dangerously close. Adjust altitude or heading urgently."
+    elif prob >= 0.75 and distance < 5:
+        return "⚠️ Warning: Close proximity detected. Recommend immediate review of flight paths."
+    elif prob >= 0.6 and alt_diff < 300 and heading_diff < 20:
+        return "⚠️ Moderate risk: Same heading and low altitude difference. Monitor closely."
+    elif prob >= 0.5 and speed_diff < 50:
+        return "⚠️ Moderate risk: Similar speeds may increase collision chance. Suggest speed adjustment."
+    elif alt_diff < 300 and distance < 8:
+        return "ℹ️ Advisory: Low altitude difference and short distance. Consider altitude separation."
+    elif heading_diff < 15 and distance < 10:
+        return "ℹ️ Advisory: Aircrafts heading in nearly the same direction. Monitor spacing."
+    elif distance < 3:
+        return "⚠️ Close distance alert: Aircrafts are within 3 km. Maintain communication."
+    elif 0.3 <= prob < 0.5:
+        return "✅ Low risk: No immediate threat detected, but maintain awareness."
+    elif prob < 0.3:
+        return "✅ Safe: No action required. Maintain standard monitoring."
     else:
-        return "The situation is safe, no action is required at this time."
+        return "ℹ️ Status unclear. Verify input parameters and re-evaluate."
+
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -65,7 +79,8 @@ def predict():
         features_scaled = scaler.transform(features)
         prob = model.predict_proba(features_scaled)[0][1]
         prob_percent = f"{prob * 100:.2f}%"
-        action = suggest_action(prob, alt_diff)
+        action = suggest_action(prob, alt_diff, speed_diff, heading_diff, distance)
+
 
         return jsonify({
             'collision_probability': prob_percent,
